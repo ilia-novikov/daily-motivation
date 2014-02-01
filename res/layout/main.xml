@@ -5,37 +5,43 @@
               android:layout_height="fill_parent"
     >
 
-    <SeekBar
-        android:id="@+id/text_size_bar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_marginTop="56dp"
-        android:layout_toRightOf="@+id/text_size_field"
-
-        android:max="96"
-        android:progress="20"/>
-
-    <EditText
-        android:id="@+id/text_size_field"
-        android:layout_width="96dp"
-        android:layout_height="wrap_content"
-        android:ems="10"
-        android:layout_alignTop="@+id/text_size_bar"
-        android:layout_alignParentStart="true"
-        android:layout_marginLeft="4dp"
-        android:layout_marginRight="4dp"
-        android:inputType="number"/>
-
     <TextView
+        android:id="@+id/text_size_label"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceMedium"
         android:text="@string/text_size_text"
-        android:layout_above="@+id/text_size_field"
-        android:layout_alignStart="@+id/text_size_field"
+        android:layout_marginTop="16dp"
+        android:layout_marginLeft="16dp"
         android:layout_marginBottom="4dp"
-        android:labelFor="@id/text_size_field"/>
+        />
+
+
+    <EditText
+        android:id="@+id/text_size_field"
+        android:layout_width="48dp"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="4dp"
+        android:layout_marginRight="16dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginBottom="4dp"
+        android:inputType="number"
+        android:text="@integer/default_text_size"
+        android:layout_below="@+id/text_size_label"
+        android:layout_alignStart="@+id/text_size_label"
+        android:labelFor="@id/text_size_label"
+        />
+
+    <SeekBar
+        android:id="@+id/text_size_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="4dp"
+        android:max="@integer/max_text_size"
+        android:progress="@integer/default_text_size"
+        android:layout_toEndOf="@id/text_size_field"
+        android:layout_alignTop="@id/text_size_field"
+        />
 
 </RelativeLayout>
 

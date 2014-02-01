@@ -29,7 +29,7 @@ public class WidgetProvider extends AppWidgetProvider {
         int textSize = preferences.getInt("text_size", 20);
         for (int id : ids) {
             // Магия
-            Intent intent = new Intent(context, Settings.class);
+            Intent intent = new Intent(context, SettingsActivity.class);
             PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
             RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_layout);
             views.setTextViewTextSize(R.id.large_text_id, TypedValue.COMPLEX_UNIT_DIP, textSize);
