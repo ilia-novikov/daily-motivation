@@ -16,7 +16,7 @@ import android.widget.RemoteViews;
  * Date: 31.01.14
  */
 public class WidgetProvider extends AppWidgetProvider {
-    private static final String TAG = "daily_motivation";
+    public static final String TAG = "daily_motivation";
 
     static {
         Log.d(TAG, "OMG static debug message here");
@@ -25,8 +25,9 @@ public class WidgetProvider extends AppWidgetProvider {
 
     @Override
     public void onUpdate(Context context, AppWidgetManager manager, int[] ids) {
-        SharedPreferences preferences = context.getSharedPreferences(TAG, 0);
+        SharedPreferences preferences = context.getSharedPreferences(TAG, Context.MODE_PRIVATE);
         int textSize = preferences.getInt("text_size", 20);
+        Log.d(TAG, "Got textSize: " + textSize);
         for (int id : ids) {
             // Магия
             Intent intent = new Intent(context, Settings.class);

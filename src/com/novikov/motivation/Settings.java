@@ -1,7 +1,9 @@
 package com.novikov.motivation;
 
 import android.app.Activity;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.Preference;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.widget.EditText;
@@ -65,4 +67,15 @@ public class Settings extends Activity {
             }
         });
     }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        int textSize = ((SeekBar) findViewById(R.id.text_size_bar)).getProgress();
+        SharedPreferences.Editor preferenceEditor = getSharedPreferences(WidgetProvider.TAG, MODE_PRIVATE).edit();
+        Log.d(TAG, "Settings were stopped");
+        preferenceEditor.putInt("text_size", textSize);
+        preferenceEditor.commit();
+    }
+
 }
