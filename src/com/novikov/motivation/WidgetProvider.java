@@ -25,8 +25,8 @@ public class WidgetProvider extends AppWidgetProvider {
 
     @Override
     public void onUpdate(Context context, AppWidgetManager manager, int[] ids) {
-        SharedPreferences preferences = context.getSharedPreferences(TAG, 0);
-        int textSize = preferences.getInt("text_size", 20);
+        SharedPreferences preferences = context.getSharedPreferences(SettingsActivity.PREFS, 0);
+        int textSize = preferences.getInt("text_size", context.getResources().getInteger(R.integer.default_text_size));
         for (int id : ids) {
             // Магия
             Intent intent = new Intent(context, SettingsActivity.class);

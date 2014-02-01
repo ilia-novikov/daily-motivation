@@ -1,6 +1,8 @@
 package com.novikov.motivation;
 
 import android.app.Activity;
+import android.appwidget.AppWidgetManager;
+import android.content.ComponentName;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.os.Bundle;
@@ -10,6 +12,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.EditText;
+import android.widget.RemoteViews;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
@@ -27,7 +30,7 @@ public class SettingsActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
         initialize();
-        addTextSizeEvents();
+        attachTextSizeListener();
     }
 
     private void initialize() {
@@ -35,7 +38,7 @@ public class SettingsActivity extends Activity {
         settings = getSharedPreferences(PREFS, 0);
     }
 
-    private void addTextSizeEvents() {
+    private void attachTextSizeListener() {
         final SeekBar bar = (SeekBar) findViewById(R.id.text_size_bar);
         final EditText edit = (EditText) findViewById(R.id.text_size_field);
         final int minTextSize = resources.getInteger(R.integer.min_text_size);
@@ -97,14 +100,22 @@ public class SettingsActivity extends Activity {
         return super.onCreateOptionsMenu(menu);
     }
 
+    private void saveSettings() {
+        int textSize = ((SeekBar) findViewById(R.id.text_size_bar)).getProgress();
+        SharedPreferences.Editor editor = settings.edit();
+        editor.putInt("text_size", textSize);
+        editor.commit();
+        AppWidgetManager manager = AppWidgetManager.getInstance(this);
+        int[] ids = manager.getAppWidgetIds(new ComponentName(this, WidgetProvider.class));
+        RemoteViews views = new RemoteViews(getPackageName(), R.layout.widget_layout);
+        manager.updateAppWidget(ids, views);
+    }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case (R.id.action_save): {
-                int textSize = ((SeekBar) findViewById(R.id.text_size_bar)).getProgress();
-                SharedPreferences.Editor editor = settings.edit();
-                editor.putInt("text_size", textSize);
-                editor.commit();
+                saveSettings();
                 return true;
             }
             default: {
@@ -112,6 +123,11 @@ public class SettingsActivity extends Activity {
                 return super.onOptionsItemSelected(item);
             }
         }
+    }
 
+    @Override
+    public void onStop() {
+        super.onStop();
+        saveSettings();
     }
 }

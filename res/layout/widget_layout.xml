@@ -17,15 +17,15 @@
         android:id="@+id/settings_icon"/>
 
     <TextView
+        android:id="@+id/large_text_id"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceLarge"
         android:text="Что?! До сих пор не сделал приложение?!"
-        android:id="@+id/large_text_id"
-        android:layout_centerVertical="true"
+        android:layout_below="@id/settings_icon"
         android:layout_centerHorizontal="true"
-        android:layout_margin="8dp"
-        android:textSize="10dp"
+        android:layout_margin="16dp"
+        android:textSize="20dp"
         android:textColor="#FFFFFF"
         />
 
