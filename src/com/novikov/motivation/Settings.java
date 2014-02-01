@@ -1,6 +1,10 @@
 package com.novikov.motivation;
 
 import android.app.Activity;
+import android.appwidget.AppWidgetHost;
+import android.appwidget.AppWidgetManager;
+import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.Preference;
@@ -69,13 +73,18 @@ public class Settings extends Activity {
     }
 
     @Override
-    public void onStop() {
-        super.onStop();
+    public void onPause() {
+        super.onPause();
         int textSize = ((SeekBar) findViewById(R.id.text_size_bar)).getProgress();
-        SharedPreferences.Editor preferenceEditor = getSharedPreferences(WidgetProvider.TAG, MODE_PRIVATE).edit();
-        Log.d(TAG, "Settings were stopped");
+        SharedPreferences.Editor preferenceEditor;
+        preferenceEditor = getSharedPreferences(WidgetProvider.TAG, MODE_PRIVATE).edit();
+        Context context = getApplicationContext();
         preferenceEditor.putInt("text_size", textSize);
+
         preferenceEditor.commit();
+        Intent widgetUpdate = new Intent(context, WidgetProvider.class);
+        widgetUpdate.setAction("FORCE_UPDATE");
+        context.sendBroadcast(widgetUpdate);
     }
 
 }

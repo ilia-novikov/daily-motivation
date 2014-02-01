@@ -3,6 +3,7 @@ package com.novikov.motivation;
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -18,10 +19,17 @@ import android.widget.RemoteViews;
 public class WidgetProvider extends AppWidgetProvider {
     public static final String TAG = "daily_motivation";
 
-    static {
-        Log.d(TAG, "OMG static debug message here");
-    }
 
+    @Override
+    public void onReceive(final Context context, final Intent intent)
+    {
+        super.onReceive(context, intent);
+
+        if ("FORCE_UPDATE".equals(intent.getAction())) {
+            Log.d(TAG, "Force update called");
+            forceUpdate(context);
+        }
+    }
 
     @Override
     public void onUpdate(Context context, AppWidgetManager manager, int[] ids) {
@@ -29,7 +37,6 @@ public class WidgetProvider extends AppWidgetProvider {
         int textSize = preferences.getInt("text_size", 20);
         Log.d(TAG, "Got textSize: " + textSize);
         for (int id : ids) {
-            // Магия
             Intent intent = new Intent(context, Settings.class);
             PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
             RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_layout);
@@ -37,7 +44,14 @@ public class WidgetProvider extends AppWidgetProvider {
             views.setOnClickPendingIntent(R.id.settings_icon, pendingIntent);
             manager.updateAppWidget(id, views);
         }
-        Log.d(TAG, "Widget was updated");
+        Log.d(TAG, "Widgets were updated");
+    }
+
+    public void forceUpdate(Context context) {
+        AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
+        int[] appWidgetIds =
+                appWidgetManager.getAppWidgetIds(new ComponentName(context, this.getClass()));
+        onUpdate(context, appWidgetManager, appWidgetIds);
     }
 
     @Override
