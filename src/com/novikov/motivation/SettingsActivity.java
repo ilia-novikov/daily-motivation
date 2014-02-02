@@ -2,9 +2,12 @@ package com.novikov.motivation;
 
 import android.app.Activity;
 import android.appwidget.AppWidgetManager;
+import android.content.ContentValues;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -21,6 +24,7 @@ public class SettingsActivity extends Activity {
     public static final String PREFS = "SettingsPreferences";
     private SharedPreferences settings;
     private Resources resources;
+    private int ID = AppWidgetManager.INVALID_APPWIDGET_ID;
 
     /**
      * Called when the activity is first created.
@@ -29,8 +33,7 @@ public class SettingsActivity extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
-        initialize();
-        if (!"LAUNCH_SETTINGS".equals(getIntent().getAction())) {
+        if ((!initialize()) || (!"LAUNCH_SETTINGS".equals(getIntent().getAction()))) {
             Log.d(TAG, "Activity was launched not from widget instance");
             Toast.makeText(this, resources.getString(R.string.direct_launch), Toast.LENGTH_LONG).show();
             finish();
@@ -38,10 +41,22 @@ public class SettingsActivity extends Activity {
         attachTextSizeListener();
     }
 
-    private void initialize() {
+    private boolean initialize() {
         resources = getResources();
         settings = getSharedPreferences(PREFS, 0);
-        Log.d(TAG, "Resources initialized");
+        Bundle extras = getIntent().getExtras();
+        if (extras == null) {
+            Log.e(TAG, "Error grabbing ID");
+            return false;
+        }
+        ID = extras.getInt(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID);
+        if (ID != AppWidgetManager.INVALID_APPWIDGET_ID) {
+            Log.d(TAG, "Resources initialized");
+            return true;
+        } else {
+            Log.e(TAG, "Error grabbing ID");
+            return false;
+        }
     }
 
     private void attachTextSizeListener() {
@@ -49,7 +64,27 @@ public class SettingsActivity extends Activity {
         final EditText edit = (EditText) findViewById(R.id.text_size_field);
         final int minTextSize = resources.getInteger(R.integer.min_text_size);
         // Загружаем прошлые настройки
-        int textSize = settings.getInt("text_size", -1);
+        DatabaseConnector connector = new DatabaseConnector(this);
+        SQLiteDatabase database = connector.getReadableDatabase();
+        Cursor cursor = database.query(
+                DatabaseConnector.WIDGETS_SETTINGS_TABLE,
+                new String[]{DatabaseConnector.WidgetSettingsFields.WIDGET_ID, DatabaseConnector.WidgetSettingsFields.TEXT_SIZE},
+                DatabaseConnector.WidgetSettingsFields.WIDGET_ID + "=?",
+                new String[]{String.valueOf(ID)},
+                null,
+                null,
+                null,
+                null);
+        int textSize = -1;
+        if (cursor.moveToFirst()) {
+            textSize = Integer.parseInt(cursor.getString(1));
+            Log.d(TAG, "SettingsActivity: Found widget id in DB, load OK");
+        } else {
+            Log.d(TAG, "SettingsActivity: New widget found, loading default text size");
+        }
+        cursor.close();
+        database.close();
+        connector.close();
         if (textSize != -1) {
             bar.setProgress(textSize);
             edit.setText(String.valueOf(textSize));
@@ -108,17 +143,16 @@ public class SettingsActivity extends Activity {
     }
 
     private void saveSettings() {
-        int textSize = ((SeekBar) findViewById(R.id.text_size_bar)).getProgress();
-        SharedPreferences.Editor editor = settings.edit();
-        editor.putInt("text_size", textSize);
-        editor.commit();
         Intent updateWidget = new Intent(this, WidgetProvider.class);
         updateWidget.setAction("FORCE_UPDATE");
-        Bundle extras = getIntent().getExtras();
-        int id = extras.getInt(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID);
-        if ((extras != null) && (id != AppWidgetManager.INVALID_APPWIDGET_ID)) {
-            updateWidget.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, id);
-        }
+        int textSize = ((SeekBar) findViewById(R.id.text_size_bar)).getProgress();
+        DatabaseConnector connector = new DatabaseConnector(this);
+        SQLiteDatabase database = connector.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(DatabaseConnector.WidgetSettingsFields.WIDGET_ID, ID);
+        values.put(DatabaseConnector.WidgetSettingsFields.TEXT_SIZE, textSize);
+        database.insertWithOnConflict(DatabaseConnector.WIDGETS_SETTINGS_TABLE, null, values, SQLiteDatabase.CONFLICT_REPLACE);
+        updateWidget.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, ID);
         sendBroadcast(updateWidget);
     }
 
