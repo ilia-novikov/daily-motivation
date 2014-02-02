@@ -3,7 +3,6 @@
     <string name="app_name">DailyMotivation</string>
     <string name="text_size_text">Text size:</string>
     <string name="action_save">Save</string>
-    <integer name="min_text_size">16</integer>
-    <integer name="max_text_size">96</integer>
-    <integer name="default_text_size">20</integer>
+    <string name="direct_launch">You can add widget on home screen using launcher</string>
+    <string name="settings_content_desc">Settings</string>
 </resources>

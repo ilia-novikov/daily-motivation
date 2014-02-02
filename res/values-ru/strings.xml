@@ -2,4 +2,6 @@
 <resources>
     <string name="text_size_text">Размер текста:</string>
     <string name="action_save">Сохранить</string>
+    <string name="direct_launch">Вы можете добавить виджет используя лаунчер</string>
+    <string name="settings_content_desc">Настройки</string>
 </resources>

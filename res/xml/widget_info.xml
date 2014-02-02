@@ -5,6 +5,7 @@
                     android:minHeight="40dp"
                     android:updatePeriodMillis="6000000"
                     android:initialLayout="@layout/widget_layout"
+                    android:configure="com.novikov.motivation.SettingsActivity"
                     android:resizeMode="horizontal|vertical"
                     android:widgetCategory="home_screen|keyguard"
                     android:initialKeyguardLayout="@layout/widget_layout">

@@ -2,7 +2,7 @@ package com.novikov.motivation;
 
 import android.app.Activity;
 import android.appwidget.AppWidgetManager;
-import android.content.ComponentName;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.os.Bundle;
@@ -12,9 +12,9 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.EditText;
-import android.widget.RemoteViews;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class SettingsActivity extends Activity {
     public static final String TAG = "daily_motivation";
@@ -30,12 +30,18 @@ public class SettingsActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
         initialize();
+        if (!"LAUNCH_SETTINGS".equals(getIntent().getAction())) {
+            Log.d(TAG, "Activity was launched not from widget instance");
+            Toast.makeText(this, resources.getString(R.string.direct_launch), Toast.LENGTH_LONG).show();
+            finish();
+        }
         attachTextSizeListener();
     }
 
     private void initialize() {
         resources = getResources();
         settings = getSharedPreferences(PREFS, 0);
+        Log.d(TAG, "Resources initialized");
     }
 
     private void attachTextSizeListener() {
@@ -70,7 +76,7 @@ public class SettingsActivity extends Activity {
         edit.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView textView, int i, KeyEvent keyEvent) {
-                int value = getResources().getInteger(R.integer.default_text_size);
+                int value = resources.getInteger(R.integer.default_text_size);
                 try {
                     value = Integer.parseInt(textView.getText().toString());
                 } catch (Exception ex) {
@@ -97,6 +103,7 @@ public class SettingsActivity extends Activity {
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.settings_action_bar, menu);
+        Log.d(TAG, "AppBar menu created");
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -105,10 +112,13 @@ public class SettingsActivity extends Activity {
         SharedPreferences.Editor editor = settings.edit();
         editor.putInt("text_size", textSize);
         editor.commit();
-        AppWidgetManager manager = AppWidgetManager.getInstance(this);
-        int[] ids = manager.getAppWidgetIds(new ComponentName(this, WidgetProvider.class));
-        RemoteViews views = new RemoteViews(getPackageName(), R.layout.widget_layout);
-        manager.updateAppWidget(ids, views);
+        Intent updateWidget = new Intent(this, WidgetProvider.class);
+        updateWidget.setAction("FORCE_UPDATE");
+        Bundle extras = getIntent().getExtras();
+        if (extras != null) {
+            updateWidget.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, extras.getInt(AppWidgetManager.EXTRA_APPWIDGET_ID));
+        }
+        sendBroadcast(updateWidget);
     }
 
     @Override
@@ -116,6 +126,7 @@ public class SettingsActivity extends Activity {
         switch (item.getItemId()) {
             case (R.id.action_save): {
                 saveSettings();
+                finish();
                 return true;
             }
             default: {
@@ -126,8 +137,8 @@ public class SettingsActivity extends Activity {
     }
 
     @Override
-    public void onStop() {
-        super.onStop();
-        saveSettings();
+    public void onPause() {
+        super.onPause();
+        //saveSettings();
     }
 }
