@@ -6,7 +6,6 @@ import android.appwidget.AppWidgetProvider;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.util.Log;
 import android.util.TypedValue;
 import android.widget.RemoteViews;
@@ -21,26 +20,34 @@ public class WidgetProvider extends AppWidgetProvider {
 
 
     @Override
-    public void onReceive(final Context context, final Intent intent)
-    {
+    public void onReceive(final Context context, final Intent intent) {
         super.onReceive(context, intent);
-
-        if ("FORCE_UPDATE".equals(intent.getAction())) {
-            Log.d(TAG, "Force update called");
-            forceUpdate(context);
+        if ("WIDGET_CONFIGURED".equals(intent.getAction())) {
+            Log.d(TAG, "One widget update called");
+            int widgetId = intent.getIntExtra("widget_id", 0);
+            int textSize = intent.getIntExtra("text_size", 20);
+            updateIt(context, widgetId, textSize);
         }
+    }
+
+    private void updateIt(Context context, int widgetId, int textSize) {
+        Intent intent = new Intent(context, Settings.class);
+        intent.setAction("LAUNCH_SETTINGS" + widgetId);
+        PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
+        RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_layout);
+        views.setTextViewTextSize(R.id.large_text_id, TypedValue.COMPLEX_UNIT_DIP, textSize);
+        views.setOnClickPendingIntent(R.id.settings_icon, pendingIntent);
+        AppWidgetManager.getInstance(context).updateAppWidget(widgetId, views);
     }
 
     @Override
     public void onUpdate(Context context, AppWidgetManager manager, int[] ids) {
-        SharedPreferences preferences = context.getSharedPreferences(TAG, Context.MODE_PRIVATE);
-        int textSize = preferences.getInt("text_size", 20);
-        Log.d(TAG, "Got textSize: " + textSize);
         for (int id : ids) {
             Intent intent = new Intent(context, Settings.class);
-            PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
             RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_layout);
-            views.setTextViewTextSize(R.id.large_text_id, TypedValue.COMPLEX_UNIT_DIP, textSize);
+            intent.setAction("LAUNCH_SETTINGS" + id);
+            intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, id);
+            PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
             views.setOnClickPendingIntent(R.id.settings_icon, pendingIntent);
             manager.updateAppWidget(id, views);
         }
@@ -53,6 +60,7 @@ public class WidgetProvider extends AppWidgetProvider {
                 appWidgetManager.getAppWidgetIds(new ComponentName(context, this.getClass()));
         onUpdate(context, appWidgetManager, appWidgetIds);
     }
+
 
     @Override
     public void onEnabled(Context context) {
