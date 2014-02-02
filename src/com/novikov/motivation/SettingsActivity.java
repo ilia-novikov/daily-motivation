@@ -115,8 +115,9 @@ public class SettingsActivity extends Activity {
         Intent updateWidget = new Intent(this, WidgetProvider.class);
         updateWidget.setAction("FORCE_UPDATE");
         Bundle extras = getIntent().getExtras();
-        if (extras != null) {
-            updateWidget.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, extras.getInt(AppWidgetManager.EXTRA_APPWIDGET_ID));
+        int id = extras.getInt(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID);
+        if ((extras != null) && (id != AppWidgetManager.INVALID_APPWIDGET_ID)) {
+            updateWidget.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, id);
         }
         sendBroadcast(updateWidget);
     }
