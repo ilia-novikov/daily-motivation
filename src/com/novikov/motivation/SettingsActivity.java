@@ -33,7 +33,7 @@ public class SettingsActivity extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
-        if ((!initialize()) || (!"LAUNCH_SETTINGS".equals(getIntent().getAction()))) {
+        if (!initialize()) {
             Log.d(TAG, "Activity was launched not from widget instance");
             Toast.makeText(this, resources.getString(R.string.direct_launch), Toast.LENGTH_LONG).show();
             finish();
@@ -78,9 +78,6 @@ public class SettingsActivity extends Activity {
         int textSize = -1;
         if (cursor.moveToFirst()) {
             textSize = Integer.parseInt(cursor.getString(1));
-            Log.d(TAG, "SettingsActivity: Found widget id in DB, load OK");
-        } else {
-            Log.d(TAG, "SettingsActivity: New widget found, loading default text size");
         }
         cursor.close();
         database.close();
@@ -138,7 +135,6 @@ public class SettingsActivity extends Activity {
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.settings_action_bar, menu);
-        Log.d(TAG, "AppBar menu created");
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -165,7 +161,7 @@ public class SettingsActivity extends Activity {
                 return true;
             }
             default: {
-                Log.d(TAG, "Unexpected option id: " + item.getItemId());
+                Log.e(TAG, "Unexpected option id: " + item.getItemId());
                 return super.onOptionsItemSelected(item);
             }
         }

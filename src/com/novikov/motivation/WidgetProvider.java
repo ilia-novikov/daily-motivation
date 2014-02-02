@@ -19,53 +19,56 @@ import android.widget.RemoteViews;
 public class WidgetProvider extends AppWidgetProvider {
     private static final String TAG = SettingsActivity.TAG;
 
-    @Override
-    public void onUpdate(Context context, AppWidgetManager manager, int[] ids) {
+    private void updateWidget(Context context, int id) {
         DatabaseConnector connector = new DatabaseConnector(context);
         SQLiteDatabase database = connector.getReadableDatabase();
+        Intent intent = new Intent(context, SettingsActivity.class);
+        intent.setAction("LAUNCH_SETTINGS" + id);
+        PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
+        RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_layout);
+        Cursor cursor = database.query(
+                DatabaseConnector.WIDGETS_SETTINGS_TABLE,
+                new String[]{DatabaseConnector.WidgetSettingsFields.WIDGET_ID, DatabaseConnector.WidgetSettingsFields.TEXT_SIZE},
+                DatabaseConnector.WidgetSettingsFields.WIDGET_ID + "=?",
+                new String[]{String.valueOf(id)},
+                null,
+                null,
+                null,
+                null);
+        int textSize = context.getResources().getInteger(R.integer.default_text_size);
+        if (cursor.moveToFirst()) {
+            textSize = Integer.parseInt(cursor.getString(1), textSize);
+        }
+        cursor.close();
+        database.close();
+        connector.close();
+        views.setTextViewTextSize(R.id.large_text_id, TypedValue.COMPLEX_UNIT_SP, textSize);
+        views.setOnClickPendingIntent(R.id.settings_icon, pendingIntent);
+        AppWidgetManager.getInstance(context).updateAppWidget(id, views);
+    }
+
+
+    @Override
+    public void onUpdate(Context context, AppWidgetManager manager, int[] ids) {
         for (int id : ids) {
-            // Действия по клику на иконке настроек
             Intent intent = new Intent(context, SettingsActivity.class);
-            intent.setAction("LAUNCH_SETTINGS");
-            Cursor cursor = database.query(
-                    DatabaseConnector.WIDGETS_SETTINGS_TABLE,
-                    new String[]{DatabaseConnector.WidgetSettingsFields.WIDGET_ID, DatabaseConnector.WidgetSettingsFields.TEXT_SIZE},
-                    DatabaseConnector.WidgetSettingsFields.WIDGET_ID + "=?",
-                    new String[]{String.valueOf(id)},
-                    null,
-                    null,
-                    null,
-                    null);
-            int textSize = context.getResources().getInteger(R.integer.default_text_size);
-            if (cursor.moveToFirst()) {
-                textSize = Integer.parseInt(cursor.getString(1), textSize);
-                Log.d(TAG, "Found widget id in DB, load OK");
-            }
-            else {
-                Log.d(TAG, "New widget found, loading default text size");
-            }
-            cursor.close();
-            Log.d(TAG, "Adding intent extra id - " + String.valueOf(id));
+            intent.setAction("LAUNCH_SETTINGS" + String.valueOf(id));
             intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, id);
-            PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+            PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
             RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_layout);
-            views.setTextViewTextSize(R.id.large_text_id, TypedValue.COMPLEX_UNIT_SP, textSize);
             views.setOnClickPendingIntent(R.id.settings_icon, pendingIntent);
             manager.updateAppWidget(id, views);
         }
-        database.close();
-        connector.close();
-        Log.d(TAG, "Widget was updated");
+        Log.d(TAG, "Widgets was updated");
     }
 
     @Override
     public void onReceive(Context context, Intent intent) {
         super.onReceive(context, intent);
         if ("FORCE_UPDATE".equals(intent.getAction())) {
-            AppWidgetManager manager = AppWidgetManager.getInstance(context);
             int id = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID);
             if (id != AppWidgetManager.INVALID_APPWIDGET_ID)
-                onUpdate(context, manager, new int[]{id});
+                updateWidget(context, id);
         }
     }
 }
